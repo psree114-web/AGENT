@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhD/Research Engine</title>
+    <title>Research Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 font-sans">
     <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
-        <h1 class="text-2xl font-bold mb-4 text-gray-800">PhD Research Engine</h1>
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">Research Engine</h1>
 
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">API Key (Securely stored in browser)</label>
@@ -16,15 +16,17 @@
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Level / Task Type</label>
+            <label class="block text-sm font-medium text-gray-700">Mode / Task Type</label>
             <select id="taskLevel" class="w-full mt-1 p-2 border rounded">
                 <option value="PhD">PhD (Rigorous, Theory-heavy)</option>
                 <option value="Masters">Masters (Structured, Explanatory)</option>
                 <option value="Customer">Customer (Professional, Polished)</option>
+                <option value="Job">Job Search (Resume, Interview, Career)</option>
             </select>
         </div>
 
-        <textarea id="prompt" class="w-full h-32 p-2 border rounded mb-4" placeholder="Enter your assignment or task..."></textarea>
+        <p class="text-xs text-gray-500 mb-2">Tip: Include your target role/company in the prompt (e.g., "Optimize my resume for ML Engineer role at Google")</p>
+        <textarea id="prompt" class="w-full h-32 p-2 border rounded mb-4" placeholder="Enter your assignment, task, or job search query..."></textarea>
 
         <button onclick="sendToClaude()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">Process Task</button>
 
@@ -40,18 +42,30 @@
 
             resultDiv.innerText = "Processing...";
 
+            let systemPrompt = "You are an expert AI assistant. ";
+
+            if (level === "PhD") {
+                systemPrompt += "PhD-level rigor: provide detailed proofs, theoretical depth, cite relevant literature, and use formal mathematical notation.";
+            } else if (level === "Masters") {
+                systemPrompt += "Masters-level clarity: structured explanations, step-by-step solutions, appropriate for coursework.";
+            } else if (level === "Customer") {
+                systemPrompt += "Professional client-facing: concise, actionable, polished, business-oriented, easy to understand.";
+            } else if (level === "Job") {
+                systemPrompt += "Expert career coach specializing in CS/Data Science roles. Help with resumes, cover letters, interview prep, company research, salary negotiation. Quantify achievements, match JD keywords, optimize for ATS systems.";
+            }
+
             const response = await fetch('https://api.anthropic.com/v1/messages', {
                 method: 'POST',
                 headers: {
                     'x-api-key': key,
                     'anthropic-version': '2023-06-01',
                     'content-type': 'application/json',
-                    'anthropic-dangerous-direct-browser-access': 'true' // Note: This is for local/dev use
+                    'anthropic-dangerous-direct-browser-access': 'true'
                 },
                 body: JSON.stringify({
                     model: "claude-3-5-sonnet-20241022",
-                    max_tokens: 1024,
-                    system: `You are a research assistant. The user is at the ${level} level. Act with the appropriate rigor, depth, and tone for this level.`,
+                    max_tokens: 2048,
+                    system: systemPrompt,
                     messages: [{role: "user", content: prompt}]
                 })
             });
